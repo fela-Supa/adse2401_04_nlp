@@ -9,7 +9,7 @@ This file demonstrates common NLP preprocessing steps using NLTK.
 # ------------------------------------------------------------------------------------------
 import nltk
 from nltk.tokenize import word_tokenize
-from nltk.corpus import stopwords, wordnet
+from nltk.corpus import stopwords
 from nltk.stem import WordNetLemmatizer, PorterStemmer
 from nltk import pos_tag, ne_chunk
 
@@ -17,7 +17,7 @@ from nltk import pos_tag, ne_chunk
 # 1. Download required NLTK data
 # ------------------------------------------------------------------------------------------
 resources = [
-    "punkt",
+    "punk_tab",
     "stopwords",
     "wordnet",
     "averaged_perceptron_tagger",

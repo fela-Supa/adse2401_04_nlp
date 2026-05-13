@@ -8,8 +8,8 @@ The preprocessing pipeline includes:
 4. Repeated character normalization
 5. Emoji removal
 6. Punctuation cleaning
-7. Tokenisation
-8. Stopword Removal
+7. Tokenization
+8. Stop-word Removal
 9. Optional Lemmatisation
 
 Author: Alvin
@@ -25,7 +25,7 @@ from collections import Counter
 from nltk.corpus import stopwords
 from nltk.stem import WordNetLemmatizer
 from nltk.tokenize import word_tokenize
-from nltk.corpus import wordnet
+# from nltk.corpus import wordnet
 from typing import List
 
 # ------------------------------------------------------------------------------------------
@@ -105,3 +105,143 @@ CONTRACTIONS = {
     "'ve": " have",
     "'m": " am",
 }
+
+# ------------------------------------------------------------------------------------------
+# 4. Preprocessing Functions
+# ------------------------------------------------------------------------------------------
+def normalize_text(text: str)->str:
+    """
+    Apply basic text normalization.
+
+    This includes lower-casing, slang replacement, and contraction expansion.
+    :param text: Raw input text.
+    :return: Normalized input text.
+    """
+    text = text.lower()
+
+    # Replace slang
+    for pattern, replacement in SLANG_DICT.items():
+        text = re.sub(pattern, replacement, text)
+
+    # Expand contractions
+    for contraction, expansion in CONTRACTIONS.items():
+        text = text.replace(contraction, expansion)
+
+    return text
+
+def remove_emojis(text: str)->str:
+    """
+    Remove emojis and non-ASCII text/characters.
+
+    :param text: Input text/string
+    :return: Cleaned string
+    """
+    return re.sub(r'[^\x00-\x7F]+', '', text)
+
+def normalize_repeated_characters(text: str)->str:
+    """
+    Reduce repeated characters in input text (e.g. 'sooooooo' -> 'so').
+    :param text: Input text/string
+    :return: Normalized string
+    """
+    return re.sub(r'(.)\1{2,}', r'\1\1', text)
+
+def clean_text(text: str)->str:
+    """
+    Remove punctuation and extra whitespace from input text.
+
+    :param text: Input text/string
+    :return: Cleaned string
+    """
+    text = re.sub(r'[^a-z\s]', ' ', text)
+    text = re.sub(r'\s+', ' ', text)
+    return text.strip()
+
+def tokenise_and_filter(text: str)->list[str]:
+    """
+    Tokenize text and remove stop words
+
+    :param text: Cleaned text/string
+    :return: List of tokens
+    """
+    stop_words = set(stopwords.words('english'))
+    tokens = word_tokenize(text)
+
+    return [word for word in tokens if word not in stop_words and len(word) > 2]
+
+def lemmatise_tokens(tokens: List[str]) -> List[str]:
+    """
+    Apply Lemmatisation on tokens
+    :param tokens: List of tokens
+    :return: List of lemmatised tokens
+    """
+    lemmatizer = WordNetLemmatizer()
+    return [lemmatizer.lemmatize(token) for token in tokens]
+
+# ------------------------------------------------------------------------------------------
+# 5. Pipeline Function
+# ------------------------------------------------------------------------------------------
+def preprocess_review(text: str)-> List[str]:
+    """
+    Apply full preprocessing pipeline to a single review.
+
+    :param text: Input text/string
+    :return: Raw review
+    """
+    text = normalize_text(text)
+    text = normalize_repeated_characters(text)
+    text = remove_emojis(text)
+    text = clean_text(text)
+
+    tokens = tokenise_and_filter(text)
+    tokens = lemmatise_tokens(tokens)
+
+    return tokens
+
+# ------------------------------------------------------------------------------------------
+# 6. Visualisation
+# ------------------------------------------------------------------------------------------
+def plot_word_frequencies(reviews: List[str], processed:List[List[str]])->None:
+
+    original_words =  "".join(reviews).lower().split()
+    processed_words = [word for review in processed for word in review]
+
+    orig_counts = Counter(original_words)
+    proc_counts = Counter(processed_words)
+
+    top_orig = dict(orig_counts.most_common(10))
+    top_proc = dict(proc_counts.most_common(10))
+
+    plt.figure()
+    plt.bar(top_orig.keys(), top_orig.values())
+    plt.title('Before preprocessing')
+    plt.xticks(rotation=45)
+
+    plt.figure()
+    plt.bar(top_proc.keys(), top_proc.values())
+    plt.title('After preprocessing')
+    plt.xticks(rotation=45)
+
+    plt.show()
+
+# ------------------------------------------------------------------------------------------
+# 7. Main Execution Function
+# ------------------------------------------------------------------------------------------
+def main():
+    """
+    Execute preprocessing pipeline and display results
+    :return:
+    """
+    print(f"\nOriginal Reviews:\n{REVIEWS[0]}")
+
+    processed_reviews = [preprocess_review(r) for r in REVIEWS]
+
+    print(f"\nProcessed Reviews:\n{processed_reviews[0]}")
+
+    plot_word_frequencies(REVIEWS, processed_reviews)
+
+# ------------------------------------------------------------------------------------------
+# 8. Run the script by invoking it's main() function
+# ------------------------------------------------------------------------------------------
+if __name__ == "__main__":
+    main()
