@@ -1,0 +1,1 @@
+Remove-Item -Recurse -Force "venv\Lib\site-packages\pip\_internal\metadata\importlib" -ErrorAction SilentlyContinue
